@@ -47,10 +47,6 @@ Python, desde `Simulacion/python`:
 python main.py
 ```
 
-```bash
-python -m unittest -v
-```
-
 Se muestran las tablas en consola y guardan en `resultados/` las tablas CSV
 y las gráficas.
 
