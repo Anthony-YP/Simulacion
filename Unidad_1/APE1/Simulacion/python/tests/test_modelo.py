@@ -1,4 +1,4 @@
-"""Etapa 5 - Verificación: el modelo calcula lo que dice la guía."""
+"""Verificación: el modelo calcula lo del APE guia."""
 
 import unittest
 
