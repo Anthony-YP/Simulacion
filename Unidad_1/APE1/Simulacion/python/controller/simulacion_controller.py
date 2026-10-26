@@ -1,7 +1,6 @@
-"""CONTROLADOR - Une el Modelo con la Vista.
-
+"""
 Pide los cálculos al modelo y envía los resultados a la vista.
-Etapas cubiertas: 6. Experimentación (original vs. ajustado, varios r)
+Etapa 6: Experimentación (original vs. ajustado, varios r)
 y 7. Documentación (tablas CSV y gráficas en resultados/).
 """
 

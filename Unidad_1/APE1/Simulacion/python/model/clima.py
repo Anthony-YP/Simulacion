@@ -1,7 +1,5 @@
 """MODELO - Índice de posibilidad de lluvia.
 
-Aquí está toda la lógica matemática del problema
-
 Etapas de la simulación cubiertas en model:
   1. Definición del problema: saber en qué horas del día puede llover.
   2. Formulación conceptual: I = wH*H + wN*N + wT*Tf
@@ -80,13 +78,8 @@ def normalizar(porcentaje: float) -> float:
 
 
 def factor_temperatura(temperatura: float) -> float:
-    """Calcula Tf a partir de la temperatura en °C.
-
-    En la tabla de la guía Tf baja 0.10 cada 2 °C (0.05 por grado) desde
-    1.00 a 10 °C hasta 0.10 a 28 °C. Eso es una recta:
-        Tf = 1 - 0.05 * (T - 10),  limitada al rango [0.10, 1.00]
-    La recta da exactamente los valores de la tabla y además permite
-    calcular temperaturas impares como 15 °C o 17 °C (que sí aparecen en los datos).
+    """
+    Calcula Tf a partir de la temperatura en °C.
     """
     tf = 1.0 - 0.05 * (temperatura - 10.0)
     return float(np.clip(tf, 0.10, 1.00))
@@ -102,7 +95,7 @@ def indice_lluvia(h: float, n: float, tf: float, pesos: PesosModelo) -> float:
 
 
 def clasificar(indice: float) -> str:
-    """Aplica la tabla de reglas de la guía."""
+    """Aplica la tabla de reglas del APE guia."""
     if indice < 0.40:
         return "Sin lluvia"
     if indice < 0.60:
@@ -118,7 +111,6 @@ def clasificar(indice: float) -> str:
 
 @dataclass(frozen=True)
 class ResultadoHora:
-    """Una fila de la tabla final que pide la guía."""
 
     hora: str
     humedad: float

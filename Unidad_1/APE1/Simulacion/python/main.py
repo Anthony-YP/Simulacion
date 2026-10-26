@@ -1,5 +1,3 @@
-"""Punto de entrada: crea el controlador y ejecuta la simulación."""
-
 from pathlib import Path
 
 from controller.simulacion_controller import SimulacionController

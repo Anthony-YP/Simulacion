@@ -1,6 +1,4 @@
-"""VISTA - Gráficas con Matplotlib.
-
-Cada función recibe datos ya calculados y guarda una imagen PNG.
+"""Gráficas con Matplotlib
 """
 
 from pathlib import Path
@@ -12,7 +10,7 @@ import matplotlib.pyplot as plt
 
 from model.clima import ResultadoHora
 
-# Umbrales de la tabla de reglas (se dibujan como franjas de color)
+# Umbrales de la tabla de reglas
 FRANJAS = [
     (0.00, 0.40, "#d9ecd0", "Sin lluvia"),
     (0.40, 0.60, "#fbefc4", "Baja posibilidad"),

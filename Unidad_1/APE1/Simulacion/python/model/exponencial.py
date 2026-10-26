@@ -1,4 +1,4 @@
-"""MODELO - Crecimiento y decrecimiento exponencial.
+"""Crecimiento y decrecimiento exponencial.
 
     P(t) = P0 * e^(r t)
 
