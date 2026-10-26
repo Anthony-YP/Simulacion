@@ -1,12 +1,9 @@
 """MODELO - Crecimiento y decrecimiento exponencial.
 
-Los resultados esperados y las preguntas de control de la guía hablan de
-P0 y de la tasa r, que pertenecen al modelo exponencial:
-
     P(t) = P0 * e^(r t)
 
   - P(t): variable dependiente (valor en el tiempo t)
-  - t:    variable independiente (horas)
+  - t:    variable independiente (número de horas)
   - P0:   parámetro, valor inicial en t = 0
   - r:    parámetro, tasa de crecimiento (r > 0) o decrecimiento (r < 0)
 """

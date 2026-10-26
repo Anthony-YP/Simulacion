@@ -1,12 +1,12 @@
 """MODELO - Índice de posibilidad de lluvia.
 
-Aquí está toda la lógica matemática del problema; no imprime ni grafica nada.
+Aquí está toda la lógica matemática del problema
 
-Etapas de la simulación cubiertas en este archivo:
+Etapas de la simulación cubiertas en model:
   1. Definición del problema: saber en qué horas del día puede llover.
   2. Formulación conceptual: I = wH*H + wN*N + wT*Tf
-  3. Datos: tabla de mediciones de la guía (DATOS_GUIA).
-  4. Construcción del modelo: funciones de este archivo.
+  3. Datos: tabla de mediciones de la guía.
+  4. Construcción del modelo.
 """
 
 from dataclasses import dataclass
@@ -15,7 +15,7 @@ import numpy as np
 
 
 # ---------------------------------------------------------------------------
-# PASO 1 - Parámetros del modelo (constantes que el usuario puede ajustar)
+# PASO 1 - Definir los parámetros del modelo
 # ---------------------------------------------------------------------------
 
 @dataclass(frozen=True)
@@ -30,26 +30,26 @@ class PesosModelo:
     def __post_init__(self) -> None:
         total = self.w_humedad + self.w_nubosidad + self.w_temperatura
         if not np.isclose(total, 1.0):
-            raise ValueError(f"Los pesos deben sumar 1 y suman {total}")
+            raise ValueError(f"Los pesos deben sumar 1 y suman: {total}")
 
 
-# Modelo original de la guía: I = 0.5H + 0.3N + 0.2Tf
+# Modelo original: I = 0.5H + 0.3N + 0.2Tf
 MODELO_ORIGINAL = PesosModelo("Original", 0.50, 0.30, 0.20)
 
 # Modelo ajustado: se da más peso a la nubosidad y menos a la temperatura.
 # Motivo: con el modelo original las mañanas frías (06:00, 40 % de nubes)
-# salen como "Lluvia probable" solo por el factor de temperatura, lo cual
-# no es realista; sin nubes no hay lluvia.
+# salen casi siempre como "Lluvia probable" solo por el factor de temperatura, lo cual
+# no es tan realista; sin nubes no hay lluvia.
+
 MODELO_AJUSTADO = PesosModelo("Ajustado", 0.45, 0.40, 0.15)
 
-
 # ---------------------------------------------------------------------------
-# PASO 2 - Datos de entrada (tabla de la guía)
+# PASO 2 - Datos de entrada
 # ---------------------------------------------------------------------------
 
 @dataclass(frozen=True)
 class Medicion:
-    """Una fila de datos medidos: hora, humedad %, nubosidad % y temperatura °C."""
+    """La fila de datos medidos: hora, humedad %, nubosidad % y temperatura °C."""
 
     hora: str
     humedad: float
@@ -75,7 +75,7 @@ DATOS_GUIA = [
 # ---------------------------------------------------------------------------
 
 def normalizar(porcentaje: float) -> float:
-    """Convierte un porcentaje (0-100) en un valor entre 0 y 1. Ej: 90 % -> 0.90."""
+    """Convierte un porcentaje (0-100) en un valor entre 0 y 1."""
     return porcentaje / 100.0
 
 

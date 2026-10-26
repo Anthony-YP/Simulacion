@@ -1,7 +1,4 @@
-"""VISTA - Salida en consola y archivo CSV.
-
-La vista solo recibe resultados ya calculados por el modelo y los presenta.
-"""
+"""VISTA - Salida en consola y archivo CSV."""
 
 import csv
 from pathlib import Path
@@ -12,7 +9,7 @@ ENCABEZADOS = ["Hora", "Humedad", "Nubosidad", "Temp.", "H", "N", "Tf", "Índice
 
 
 def mostrar_tabla(titulo: str, resultados: list[ResultadoHora]) -> None:
-    """Imprime la tabla de la guía con columnas alineadas."""
+    """Imprime la tabla de la guía"""
     print(f"\n=== {titulo} ===")
     print(f"{'Hora':<6} {'Hum%':>5} {'Nub%':>5} {'T°C':>4} "
           f"{'H':>5} {'N':>5} {'Tf':>5} {'Índice':>7}  Estado")
@@ -39,7 +36,7 @@ def mostrar_tasas(info: list[tuple[float, float, float]]) -> None:
 
 
 def guardar_csv(resultados: list[ResultadoHora], ruta: Path) -> None:
-    """Guarda la tabla completa en CSV para el informe."""
+    """Guarda la tabla completa en CSV."""
     with open(ruta, "w", newline="", encoding="utf-8") as f:
         escritor = csv.writer(f)
         escritor.writerow(ENCABEZADOS)
