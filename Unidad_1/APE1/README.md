@@ -1,4 +1,4 @@
-# Práctica 1: construcción y simulación de un modelo matemático
+# APE 1: construcción y simulación de un modelo matemático
 
 ## 1. Descripción
 
@@ -23,7 +23,7 @@ El proyecto se hizo en **Python** y en **Java**, los dos con arquitectura
 - Python 3, NumPy y Matplotlib
 - Java 17 o posterior (solo biblioteca estándar: Java2D e ImageIO para las gráficas)
 
-## 3. Guía de nstalación
+## 3. Guía de instalación
 
 Python, desde `Simulacion/python`:
 
@@ -41,7 +41,7 @@ python -m pip install -r requirements.txt
 
 Java: solo se necesita un JDK 17+ instalado (`javac -version`).
 
-## 4. Guía de jecución
+## 4. Guía de ejecución
 
 Python, desde `Simulacion/python`:
 
@@ -66,7 +66,7 @@ java -cp out Main
 Ambos muestran las tablas en consola y guardan en `resultados/` las tablas CSV
 y las gráficas.
 
-## 5. Estructura
+## 5. Estructura del proyecto
 
 ```text
 Simulacion/
@@ -157,6 +157,6 @@ sumando 1, por lo que `I` sigue entre 0 y 1.
 ![Exponencial](Simulacion/python/resultados/exponencial.png)
 
 
-## 9. Autor
+## 8. Autor
 
 Anthony José Yaguana Pérez
