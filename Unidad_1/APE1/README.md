@@ -18,13 +18,12 @@ preguntas de control.
 El proyecto se hizo en **Python** y en **Java**, los dos con arquitectura
 **Modelo-Vista-Controlador**.
 
-## 2. Tecnologías
+## 2. Tecnologías utilizadas
 
 - Python 3, NumPy y Matplotlib
 - Java 17 o posterior (solo biblioteca estándar: Java2D e ImageIO para las gráficas)
-- unittest para las pruebas de verificación
 
-## 3. Instalación
+## 3. Guía de nstalación
 
 Python, desde `Simulacion/python`:
 
@@ -42,7 +41,7 @@ python -m pip install -r requirements.txt
 
 Java: solo se necesita un JDK 17+ instalado (`javac -version`).
 
-## 4. Ejecución
+## 4. Guía de jecución
 
 Python, desde `Simulacion/python`:
 
@@ -90,7 +89,7 @@ Simulacion/
     └── controller/  # SimulacionController
 ```
 
-## 6. Desarrollo según las etapas de la simulación
+## 6. Etapas según el desarrollo de la simulación
 
 1. **Definición del problema:** determinar en qué horas del día puede llover.
 2. **Formulación conceptual:**
@@ -150,55 +149,14 @@ sumando 1, por lo que `I` sigue entre 0 y 1.
 (máximo a las 18:00, `I ≈ 0.89`). El ajuste corrige la hora 06:00, que pasa a
 *Baja posibilidad*; las horas con nubosidad alta no cambian de estado.
 
-### Gráficas
 
-| Archivo | Contenido |
-|---------|-----------|
-| `indice_original.png`, `indice_ajustado.png` | Índice por hora sobre las franjas de la tabla de reglas |
-| `comparacion.png` | Modelo original contra ajustado |
-| `variables.png` | H, N y Tf normalizados (solo en Python) |
-| `exponencial.png` | Crecimiento (r > 0) y decrecimiento (r < 0) |
+### Gráficas
 
 ![Índice original](Simulacion/python/resultados/indice_original.png)
 ![Comparación](Simulacion/python/resultados/comparacion.png)
 ![Exponencial](Simulacion/python/resultados/exponencial.png)
 
-### Influencia de r (P0 = 100, t = 24 h)
-
-| r     | P(24)   | Duplicación / vida media | Comportamiento |
-|-------|---------|--------------------------|----------------|
-| 0.10  | 1102.32 | 6.93 h                   | Crecimiento    |
-| 0.05  | 332.01  | 13.86 h                  | Crecimiento    |
-| 0.00  | 100.00  | —                        | Constante      |
-| −0.05 | 30.12   | 13.86 h                  | Decrecimiento  |
-| −0.10 | 9.07    | 6.93 h                   | Decrecimiento  |
-
-**Interpretación matemática:**
-
-- Índice de lluvia: es una combinación lineal, `∂I/∂H = 0.5`, `∂I/∂N = 0.3` y
-  `∂I/∂Tf = 0.2`; cada peso dice cuánto sube `I` cuando esa variable sube una
-  unidad. Como `Tf` baja con la temperatura, el calor reduce el índice.
-- Exponencial: `dP/dt = rP`, la variación es proporcional al valor actual. El
-  signo de `r` decide si crece o decrece, y `|r|` la rapidez. Duplicar `r`
-  divide a la mitad el tiempo de duplicación (`ln2/|r|`).
-
-## 8. Preguntas de control
-
-1. **¿Qué es un modelo matemático?** Una representación simplificada de un
-   sistema real mediante variables, parámetros y ecuaciones que permite
-   describirlo y predecir su comportamiento.
-2. **¿Diferencia entre variable y parámetro?** La variable cambia durante la
-   simulación (humedad, tiempo, P(t)); el parámetro es fijo en una ejecución y
-   define el modelo (pesos, P0, r).
-3. **¿Qué representa P₀?** El valor inicial de la población o magnitud, en
-   `t = 0`.
-4. **¿Qué ocurre cuando r < 0?** Hay decrecimiento exponencial: P(t) disminuye
-   y tiende a 0 sin llegar a ser negativo.
-5. **¿Limitaciones del modelo exponencial?** Supone recursos ilimitados y `r`
-   constante, por eso con `r > 0` crece sin límite; no considera capacidad de
-   carga, competencia ni factores externos. Solo sirve en periodos cortos (el
-   modelo logístico corrige esto).
 
 ## 9. Autor
 
-Anthony José Yaguana Pérez, Simulación, ciclo 5, Computación.
+Anthony José Yaguana Pérez
