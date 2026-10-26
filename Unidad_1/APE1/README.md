@@ -15,13 +15,12 @@ modelo exponencial `P(t) = P0·e^(rt)` para analizar la influencia de `r`
 (crecimiento y decrecimiento), que piden los resultados esperados y las
 preguntas de control.
 
-El proyecto se hizo en **Python** y en **Java**, los dos con arquitectura
-**Modelo-Vista-Controlador**.
+El proyecto se hizo en **Python**, con arquitectura
+**M-V-C**.
 
 ## 2. Tecnologías utilizadas
 
 - Python 3, NumPy y Matplotlib
-- Java 17 o posterior (solo biblioteca estándar: Java2D e ImageIO para las gráficas)
 
 ## 3. Guía de instalación
 
@@ -39,7 +38,6 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-Java: solo se necesita un JDK 17+ instalado (`javac -version`).
 
 ## 4. Guía de ejecución
 
@@ -53,24 +51,16 @@ python main.py
 python -m unittest -v
 ```
 
-Java, desde `Simulacion/java`:
-
-```bash
-javac -d out $(find src -name "*.java")
-```
-
-```bash
-java -cp out Main
-```
-
-Ambos muestran las tablas en consola y guardan en `resultados/` las tablas CSV
+Se muestran las tablas en consola y guardan en `resultados/` las tablas CSV
 y las gráficas.
 
 ## 5. Estructura del proyecto
 
 ```text
 Simulacion/
-├── python/
+├── Informe/ 
+|
+├── Simulacion/python
 │   ├── main.py                       # Punto de entrada
 │   ├── model/                        # MODELO: datos y ecuaciones
 │   │   ├── clima.py                  # Tf, índice I, reglas, simulación
@@ -82,11 +72,6 @@ Simulacion/
 │   │   └── simulacion_controller.py  # CONTROLADOR: une modelo y vista
 │   ├── tests/test_modelo.py          # Verificación
 │   └── resultados/                   # Salidas generadas
-└── java/src/
-    ├── Main.java
-    ├── model/       # Medicion, PesosModelo, ResultadoHora, ModeloClima, ModeloExponencial
-    ├── view/        # VistaConsola, VistaGrafica
-    └── controller/  # SimulacionController
 ```
 
 ## 6. Etapas según el desarrollo de la simulación
@@ -100,7 +85,7 @@ Simulacion/
    grado, así que se usa la recta `Tf = 1 − 0.05(T − 10)` limitada a
    `[0.10, 1.00]`. Da los mismos valores de la tabla y permite calcular
    15 °C (0.75) y 17 °C (0.65).
-4. **Construcción del modelo:** `model/clima.py` y `ModeloClima.java`.
+4. **Construcción del modelo:** `model/clima.py`.
 5. **Verificación y validación:** las pruebas comprueban el ejemplo de la guía
    (90 %, 80 %, 18 °C → `I = 0.81`, Lluvia), la tabla de `Tf` y los límites de
    las reglas. Para validar se revisó si los resultados tienen sentido físico:
@@ -128,7 +113,7 @@ Simulacion/
 ### Ajuste del modelo: I = 0.45H + 0.40N + 0.15Tf
 
 **Por qué:** en el modelo original la temperatura pesa demasiado y una mañana
-fría con pocas nubes (06:00) sale como *Lluvia probable*. Sin nubes no hay
+fría con pocas nubes (06:00) sale como Lluvia probable. Sin nubes no hay
 lluvia, así que se sube el peso de la nubosidad (0.30 → 0.40) y se baja el de
 la temperatura (0.20 → 0.15) y el de la humedad (0.50 → 0.45). Los pesos siguen
 sumando 1, por lo que `I` sigue entre 0 y 1.
@@ -147,7 +132,7 @@ sumando 1, por lo que `I` sigue entre 0 y 1.
 
 **Conclusión:** en los dos modelos la lluvia se concentra de 16:00 a 22:00
 (máximo a las 18:00, `I ≈ 0.89`). El ajuste corrige la hora 06:00, que pasa a
-*Baja posibilidad*; las horas con nubosidad alta no cambian de estado.
+Baja  posibilidad; las horas con nubosidad alta no cambian de estado.
 
 
 ### Gráficas
