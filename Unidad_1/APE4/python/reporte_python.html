@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modelo SIR en Python</title>
+<style>
+  :root {
+    --bg: #f4f6fb; --card: #ffffff; --ink: #0f172a; --muted: #64748b; --line: #e2e8f0;
+    --soft: #f1f5f9; --s: #16a34a; --i: #e11d48; --r: #6366f1;
+    --hero-1: #0f172a; --hero-2: #312e81;
+    --shadow: 0 1px 2px rgba(15, 23, 42, .06), 0 8px 24px rgba(15, 23, 42, .06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b1120; --card: #111827; --ink: #e5e7eb; --muted: #94a3b8; --line: #1f2937;
+      --soft: #1e293b; --s: #22c55e; --i: #fb7185; --r: #818cf8;
+      --hero-1: #020617; --hero-2: #1e1b4b; --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.6;
+         font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px 48px; }
+
+  .hero { background: radial-gradient(circle at 85% 20%, rgba(225, 29, 72, .35), transparent 40%),
+                      linear-gradient(135deg, var(--hero-1), var(--hero-2));
+          color: #fff; padding: 48px 0 88px; }
+  .hero .wrap { display: flex; gap: 24px; align-items: center; justify-content: space-between;
+                flex-wrap: wrap; padding-bottom: 0; }
+  .eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: .75rem; opacity: .75; }
+  .hero h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.1; margin: 8px 0 12px; }
+  .hero p { max-width: 560px; opacity: .85; margin: 0 0 16px; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .2);
+          border-radius: 999px; padding: 4px 12px; font-size: .8rem; }
+  .r0 { text-align: center; background: rgba(255, 255, 255, .08); border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, .2); padding: 20px 28px; }
+  .r0 b { display: block; font-size: 3.2rem; line-height: 1; }
+  .r0 span { font-size: .85rem; opacity: .8; }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+          box-shadow: var(--shadow); padding: 24px; margin-top: 20px; }
+  .lift { margin-top: -56px; }
+  h2 { font-size: 1.25rem; margin: 0 0 4px; }
+  .lead { color: var(--muted); margin: 0 0 20px; }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+
+  .flow { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;
+          padding: 8px 0 4px; }
+  .state { margin: 0; width: 180px; text-align: center; }
+  .face { display: block; width: 112px; height: 112px; margin: 0 auto 10px;
+          filter: drop-shadow(0 8px 14px rgba(15, 23, 42, .18)); }
+  .state figcaption { color: var(--muted); font-size: .85rem; line-height: 1.4; }
+  .state figcaption b { display: block; color: var(--ink); font-size: 1rem; margin-bottom: 2px; }
+  .arrow { text-align: center; color: var(--muted); font-size: .8rem; min-width: 110px; }
+  .arrow i { display: block; font-style: normal; font-size: 1.6rem; color: var(--ink); line-height: 1; }
+  .mini { display: block; width: 30px; height: 30px; margin: 0 auto 4px; }
+
+  .cycle { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .panel { background: var(--soft); border-radius: 14px; padding: 18px; }
+  .panel h3 { margin: 0 0 14px; font-size: 1.05rem; }
+  .scene { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 72px; }
+  .face-sm { width: 64px; height: 64px; flex: none; }
+  .link { flex: 1; max-width: 170px; border-top: 3px dashed var(--muted); text-align: center; }
+  .link span { display: block; margin-top: 4px; font-size: .75rem; color: var(--muted); line-height: 1.3; }
+  .decision { display: flex; gap: 14px; align-items: center; margin: 14px 0; padding: 10px 14px;
+              background: var(--card); border: 1px solid var(--line); border-radius: 12px; font-size: .9rem; }
+  .dice { width: 42px; height: 42px; flex: none; color: var(--ink); transform: rotate(-12deg); }
+  .outcomes { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+  .outcomes > div { display: flex; gap: 8px; align-items: center; padding: 8px 10px; font-size: .85rem;
+                    line-height: 1.3; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+  .outcomes b { display: block; }
+  .face-xs { width: 36px; height: 36px; flex: none; }
+
+  .pops { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin-top: 8px; }
+  .pop { margin: 0; padding: 16px; text-align: center; background: var(--soft); border-radius: 14px; }
+  .pop svg { width: 100%; max-width: 220px; height: auto; }
+  .pop figcaption { color: var(--muted); font-size: .85rem; }
+  .pop figcaption b { display: block; color: var(--ink); font-size: .95rem; }
+  use.ps { color: var(--s); } use.pi { color: var(--i); } use.pr { color: var(--r); }
+  h3.sub { font-size: 1.05rem; margin: 28px 0 4px; }
+
+  .eq { background: var(--soft); border-radius: 12px; padding: 14px 16px; }
+  .eq code { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 1rem; }
+  .eq small { display: block; color: var(--muted); margin-top: 4px; }
+
+  .params { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  .param { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .param span { color: var(--muted); font-size: .8rem; }
+  .param b { display: block; font-size: 1.4rem; }
+
+  .steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+  .steps li { position: relative; padding: 0 0 18px 48px; counter-increment: step; }
+  .steps li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 32px;
+                      height: 32px; border-radius: 50%; display: grid; place-content: center;
+                      background: var(--r); color: #fff; font-weight: 700; font-size: .85rem; }
+  .steps li:not(:last-child)::after { content: ""; position: absolute; left: 15px; top: 34px;
+                                      bottom: 2px; width: 2px; background: var(--line); }
+  .steps b { display: block; }
+  .steps span { color: var(--muted); }
+  .note { background: var(--soft); border-left: 4px solid var(--r); border-radius: 8px;
+          padding: 12px 16px; margin-top: 8px; }
+
+  .kpis { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+  .kpi { border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px;
+         border-top: 4px solid var(--accent, var(--hero-2)); }
+  .kpi span { color: var(--muted); font-size: .8rem; }
+  .kpi b { display: block; font-size: 2rem; line-height: 1.2; color: var(--accent, var(--ink)); }
+  .kpi small { color: var(--muted); }
+  .chart { margin-top: 20px; background: #fff; border-radius: 12px; padding: 8px; }
+  .chart img { display: block; width: 100%; height: auto; }
+
+  .table-wrap { max-height: 420px; overflow: auto; border: 1px solid var(--line); border-radius: 12px; }
+  table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+  th { position: sticky; top: 0; background: var(--soft); text-align: right; font-size: .8rem;
+       text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  th, td { padding: 6px 14px; text-align: right; border-bottom: 1px solid var(--line); }
+  th:last-child, td:last-child { text-align: left; width: 38%; }
+  tbody tr:hover { background: var(--soft); }
+  .bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--line); }
+  .bar .s { background: var(--s); } .bar .i { background: var(--i); } .bar .r { background: var(--r); }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; color: var(--muted); font-size: .85rem;
+            margin-bottom: 12px; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+
+  footer { text-align: center; color: var(--muted); font-size: .85rem; margin-top: 32px; }
+  code.file { background: var(--soft); padding: 1px 6px; border-radius: 6px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position: absolute" aria-hidden="true">
+  <defs>
+    <symbol id="person" viewBox="0 0 20 26">
+      <circle cx="10" cy="6" r="5" fill="currentColor"/>
+      <path d="M1 26 Q1 13 10 13 Q19 13 19 26 Z" fill="currentColor"/>
+    </symbol>
+    <symbol id="face-s" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="46" style="fill: var(--s)"/>
+      <circle cx="35" cy="42" r="6" fill="#fff"/><circle cx="65" cy="42" r="6" fill="#fff"/>
+      <path d="M30 60 Q50 80 70 60" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="face-i" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="46" style="fill: var(--i)"/>
+      <path d="M27 42 L41 42 M59 42 L73 42" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+      <path d="M32 70 Q41 62 50 70 Q59 78 68 70" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <circle cx="25" cy="56" r="7" fill="#fff" opacity=".3"/><circle cx="75" cy="56" r="7" fill="#fff" opacity=".3"/>
+      <g transform="translate(-6 8) rotate(30 82 22)">
+        <rect x="77" y="2" width="10" height="32" rx="5" fill="#fff" stroke="#0f172a" stroke-width="2"/>
+        <circle cx="82" cy="35" r="7" fill="#fff" stroke="#0f172a" stroke-width="2"/>
+        <rect x="80" y="12" width="4" height="22" fill="#e11d48"/><circle cx="82" cy="35" r="4" fill="#e11d48"/>
+      </g>
+    </symbol>
+    <symbol id="face-r" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="46" style="fill: var(--r)"/>
+      <path d="M28 44 Q35 36 42 44 M58 44 Q65 36 72 44" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path d="M32 60 Q50 76 68 60" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path d="M80 58 L97 64 L97 77 Q97 91 80 99 Q63 91 63 77 L63 64 Z" fill="#fff" stroke="#0f172a" stroke-width="2"/>
+      <path d="M72 78 L78 84 L89 71" stroke="#16a34a" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="dice" viewBox="0 0 40 40">
+      <rect x="2" y="2" width="36" height="36" rx="8" fill="#fff" stroke="currentColor" stroke-width="3"/>
+      <circle cx="12" cy="12" r="3.2" fill="#0f172a"/><circle cx="28" cy="12" r="3.2" fill="#0f172a"/>
+      <circle cx="20" cy="20" r="3.2" fill="#0f172a"/>
+      <circle cx="12" cy="28" r="3.2" fill="#0f172a"/><circle cx="28" cy="28" r="3.2" fill="#0f172a"/>
+    </symbol>
+    <symbol id="virus" viewBox="0 0 40 40">
+      <g stroke="currentColor" stroke-width="3" stroke-linecap="round">
+        <path d="M20 20 L36 20 M20 20 L31.3 31.3 M20 20 L20 36 M20 20 L8.7 31.3 M20 20 L4 20 M20 20 L8.7 8.7 M20 20 L20 4 M20 20 L31.3 8.7"/>
+      </g>
+      <circle cx="20" cy="20" r="10" fill="currentColor"/>
+      <circle cx="16" cy="17" r="2.5" fill="#fff" opacity=".6"/><circle cx="23" cy="23" r="2" fill="#fff" opacity=".6"/>
+    </symbol>
+    <symbol id="heart" viewBox="0 0 40 40">
+      <path d="M20 34 C4 24 4 10 13 8 C17 7 20 10 20 13 C20 10 23 7 27 8 C36 10 36 24 20 34 Z" fill="currentColor"/>
+    </symbol>
+  </defs>
+</svg>
+<header class="hero">
+  <div class="wrap">
+    <div>
+      <div class="eyebrow">Práctica 04 · Simulación · Unidad 1</div>
+      <h1>Modelo epidemiológico SIR</h1>
+      <p>Simulación discreta de la propagación de una infección en una población de
+      100 personas, implementada en Python con SimPy.</p>
+      <div class="chips">
+        <span class="chip">Python</span><span class="chip">SimPy</span>
+        <span class="chip">Matplotlib</span><span class="chip">CSV → NetLogo</span>
+      </div>
+    </div>
+    <div class="r0"><span>Número reproductivo básico</span><b>3</b><span>R₀ = β / γ = 3.00</span></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="card lift">
+    <h2>¿Qué hace la práctica?</h2>
+    <p class="lead">Cada individuo está siempre en uno de tres estados y solo puede avanzar en un sentido.
+    La población total se mantiene: N = S + I + R.</p>
+    <div class="flow">
+      <figure class="state">
+        <svg class="face"><use href="#face-s"/></svg>
+        <figcaption><b>S · Susceptible</b>Está sano, pero se puede contagiar.</figcaption>
+      </figure>
+      <div class="arrow"><svg class="mini" style="color: var(--i)"><use href="#virus"/></svg><i>→</i>contagio<br>β = 0.30</div>
+      <figure class="state">
+        <svg class="face"><use href="#face-i"/></svg>
+        <figcaption><b>I · Infectado</b>Está enfermo y puede contagiar a otros.</figcaption>
+      </figure>
+      <div class="arrow"><svg class="mini" style="color: var(--r)"><use href="#heart"/></svg><i>→</i>recuperación<br>γ = 0.10</div>
+      <figure class="state">
+        <svg class="face"><use href="#face-r"/></svg>
+        <figcaption><b>R · Recuperado</b>Ya se curó y no vuelve a contagiarse.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Modelo matemático</h2>
+    <p class="lead">Las ecuaciones describen el modelo continuo; en el código se aproxima con pasos de tiempo discretos.</p>
+    <div class="grid">
+      <div class="eq"><code>dS/dt = −β·S·I/N</code><small>Los susceptibles disminuyen con cada contagio.</small></div>
+      <div class="eq"><code>dI/dt = β·S·I/N − γ·I</code><small>Entran nuevos contagios y salen los recuperados.</small></div>
+      <div class="eq"><code>dR/dt = γ·I</code><small>Los recuperados crecen a ritmo γ.</small></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Parámetros</h2>
+    <p class="lead">Los mismos valores se usan en Python y NetLogo para poder comparar.</p>
+    <div class="params">
+      <div class="param"><span>Población (N)</span><b>100</b></div>
+      <div class="param"><span>Infectados iniciales</span><b>5</b></div>
+      <div class="param"><span>β · tasa de infección</span><b>0.30</b></div>
+      <div class="param"><span>γ · tasa de recuperación</span><b>0.10</b></div>
+      <div class="param"><span>Tiempo de simulación</span><b>0 – 100</b></div>
+      <div class="param"><span>Semilla aleatoria</span><b>42</b></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>¿Cómo funciona cada paso?</h2>
+    <p class="lead">El proceso de SimPy repite este ciclo desde t = 0 hasta t = 100.</p>
+    <ol class="steps">
+      <li><b>📋 Registrar</b><span>Se guardan el tiempo y los conteos de S, I y R.</span></li>
+      <li><b>📸 Copiar el estado</b><span>Se toma una foto de la población antes de cambiar nada.</span></li>
+      <li><b>🦠 Contagiar</b><span>Cada infectado elige un contacto al azar; si es susceptible y
+          un número aleatorio es menor que β, se contagia.</span></li>
+      <li><b>💜 Recuperar</b><span>Cada infectado se recupera si un número aleatorio es menor que γ.</span></li>
+      <li><b>⏱️ Avanzar el reloj</b><span><code>env.timeout(1)</code> pasa al siguiente instante.</span></li>
+    </ol>
+    <div class="note">La copia del estado evita que alguien contagiado en este paso contagie a otro
+    en ese mismo paso: todos los cambios se calculan sobre la foto inicial.</div>
+  </section>
+
+  <section class="card">
+    <h2>Lo que le pasa a un infectado en cada paso</h2>
+    <p class="lead">El azar decide todo: se "tira un dado" que da un número entre 0 y 1 y se compara con β o γ.</p>
+    <div class="cycle">
+      <div class="panel">
+        <h3>1 · Intenta contagiar</h3>
+        <div class="scene">
+          <svg class="face-sm"><use href="#face-i"/></svg>
+          <div class="link"><span>elige a alguien<br>al azar</span></div>
+          <svg class="face-sm"><use href="#face-s"/></svg>
+        </div>
+        <div class="decision">
+          <svg class="dice"><use href="#dice"/></svg>
+          <div>Si el contacto está sano, se tira el dado:<br><b>¿salió menos que β = 0.30?</b></div>
+        </div>
+        <div class="outcomes">
+          <div><svg class="face-xs"><use href="#face-i"/></svg><span><b>Sí · 30%</b>se contagia</span></div>
+          <div><svg class="face-xs"><use href="#face-s"/></svg><span><b>No · 70%</b>sigue sano</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>2 · Intenta recuperarse</h3>
+        <div class="scene">
+          <svg class="face-sm"><use href="#face-i"/></svg>
+        </div>
+        <div class="decision">
+          <svg class="dice"><use href="#dice"/></svg>
+          <div>Se tira el dado otra vez:<br><b>¿salió menos que γ = 0.10?</b></div>
+        </div>
+        <div class="outcomes">
+          <div><svg class="face-xs"><use href="#face-r"/></svg><span><b>Sí · 10%</b>se recupera</span></div>
+          <div><svg class="face-xs"><use href="#face-i"/></svg><span><b>No · 90%</b>sigue enfermo</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="note">Como en promedio un infectado tarda 1/γ = 10 pasos en recuperarse y en cada paso
+    contagia con probabilidad β, contagia a unas β/γ = 3 personas: ese es el R₀.</div>
+  </section>
+
+  <section class="card">
+    <h2>Resultados</h2>
+    <p class="lead">Con semilla 42 la simulación siempre produce exactamente estos valores.</p>
+    <div class="kpis">
+      <div class="kpi" style="--accent: var(--i)"><span>Pico de infectados</span><b>34</b><small>en t = 16</small></div>
+      <div class="kpi"><span>Fin del brote</span><b>t = 70</b><small>primer instante sin infectados</small></div>
+      <div class="kpi"><span>Tasa de ataque</span><b>98%</b><small>se infectaron alguna vez</small></div>
+      <div class="kpi" style="--accent: var(--s)"><span>Susceptibles finales</span><b>2</b><small>nunca se infectaron</small></div>
+      <div class="kpi" style="--accent: var(--r)"><span>Recuperados finales</span><b>98</b><small>con 0 infectados al final</small></div>
+    </div>
+    <div class="chart"><img src="grafica_sir_python.png" alt="Gráfica de S(t), I(t) y R(t)"></div>
+
+    <h3 class="sub">La población, persona por persona</h3>
+    <p class="lead">Cada muñequito es una de las 100 personas de la simulación.</p>
+    <div class="pops">
+      <figure class="pop"><svg viewBox="0 0 240 300" role="img" aria-label="95 S, 5 I, 0 R"><use href="#person" x="2" y="2" width="20" height="26" class="ps"/><use href="#person" x="26" y="2" width="20" height="26" class="ps"/><use href="#person" x="50" y="2" width="20" height="26" class="ps"/><use href="#person" x="74" y="2" width="20" height="26" class="ps"/><use href="#person" x="98" y="2" width="20" height="26" class="ps"/><use href="#person" x="122" y="2" width="20" height="26" class="ps"/><use href="#person" x="146" y="2" width="20" height="26" class="ps"/><use href="#person" x="170" y="2" width="20" height="26" class="ps"/><use href="#person" x="194" y="2" width="20" height="26" class="ps"/><use href="#person" x="218" y="2" width="20" height="26" class="ps"/><use href="#person" x="2" y="32" width="20" height="26" class="ps"/><use href="#person" x="26" y="32" width="20" height="26" class="ps"/><use href="#person" x="50" y="32" width="20" height="26" class="ps"/><use href="#person" x="74" y="32" width="20" height="26" class="ps"/><use href="#person" x="98" y="32" width="20" height="26" class="ps"/><use href="#person" x="122" y="32" width="20" height="26" class="ps"/><use href="#person" x="146" y="32" width="20" height="26" class="ps"/><use href="#person" x="170" y="32" width="20" height="26" class="ps"/><use href="#person" x="194" y="32" width="20" height="26" class="ps"/><use href="#person" x="218" y="32" width="20" height="26" class="ps"/><use href="#person" x="2" y="62" width="20" height="26" class="ps"/><use href="#person" x="26" y="62" width="20" height="26" class="ps"/><use href="#person" x="50" y="62" width="20" height="26" class="ps"/><use href="#person" x="74" y="62" width="20" height="26" class="ps"/><use href="#person" x="98" y="62" width="20" height="26" class="ps"/><use href="#person" x="122" y="62" width="20" height="26" class="ps"/><use href="#person" x="146" y="62" width="20" height="26" class="ps"/><use href="#person" x="170" y="62" width="20" height="26" class="ps"/><use href="#person" x="194" y="62" width="20" height="26" class="ps"/><use href="#person" x="218" y="62" width="20" height="26" class="ps"/><use href="#person" x="2" y="92" width="20" height="26" class="ps"/><use href="#person" x="26" y="92" width="20" height="26" class="ps"/><use href="#person" x="50" y="92" width="20" height="26" class="ps"/><use href="#person" x="74" y="92" width="20" height="26" class="ps"/><use href="#person" x="98" y="92" width="20" height="26" class="ps"/><use href="#person" x="122" y="92" width="20" height="26" class="ps"/><use href="#person" x="146" y="92" width="20" height="26" class="ps"/><use href="#person" x="170" y="92" width="20" height="26" class="ps"/><use href="#person" x="194" y="92" width="20" height="26" class="ps"/><use href="#person" x="218" y="92" width="20" height="26" class="ps"/><use href="#person" x="2" y="122" width="20" height="26" class="ps"/><use href="#person" x="26" y="122" width="20" height="26" class="ps"/><use href="#person" x="50" y="122" width="20" height="26" class="ps"/><use href="#person" x="74" y="122" width="20" height="26" class="ps"/><use href="#person" x="98" y="122" width="20" height="26" class="ps"/><use href="#person" x="122" y="122" width="20" height="26" class="ps"/><use href="#person" x="146" y="122" width="20" height="26" class="ps"/><use href="#person" x="170" y="122" width="20" height="26" class="ps"/><use href="#person" x="194" y="122" width="20" height="26" class="ps"/><use href="#person" x="218" y="122" width="20" height="26" class="ps"/><use href="#person" x="2" y="152" width="20" height="26" class="ps"/><use href="#person" x="26" y="152" width="20" height="26" class="ps"/><use href="#person" x="50" y="152" width="20" height="26" class="ps"/><use href="#person" x="74" y="152" width="20" height="26" class="ps"/><use href="#person" x="98" y="152" width="20" height="26" class="ps"/><use href="#person" x="122" y="152" width="20" height="26" class="ps"/><use href="#person" x="146" y="152" width="20" height="26" class="ps"/><use href="#person" x="170" y="152" width="20" height="26" class="ps"/><use href="#person" x="194" y="152" width="20" height="26" class="ps"/><use href="#person" x="218" y="152" width="20" height="26" class="ps"/><use href="#person" x="2" y="182" width="20" height="26" class="ps"/><use href="#person" x="26" y="182" width="20" height="26" class="ps"/><use href="#person" x="50" y="182" width="20" height="26" class="ps"/><use href="#person" x="74" y="182" width="20" height="26" class="ps"/><use href="#person" x="98" y="182" width="20" height="26" class="ps"/><use href="#person" x="122" y="182" width="20" height="26" class="ps"/><use href="#person" x="146" y="182" width="20" height="26" class="ps"/><use href="#person" x="170" y="182" width="20" height="26" class="ps"/><use href="#person" x="194" y="182" width="20" height="26" class="ps"/><use href="#person" x="218" y="182" width="20" height="26" class="ps"/><use href="#person" x="2" y="212" width="20" height="26" class="ps"/><use href="#person" x="26" y="212" width="20" height="26" class="ps"/><use href="#person" x="50" y="212" width="20" height="26" class="ps"/><use href="#person" x="74" y="212" width="20" height="26" class="ps"/><use href="#person" x="98" y="212" width="20" height="26" class="ps"/><use href="#person" x="122" y="212" width="20" height="26" class="ps"/><use href="#person" x="146" y="212" width="20" height="26" class="ps"/><use href="#person" x="170" y="212" width="20" height="26" class="ps"/><use href="#person" x="194" y="212" width="20" height="26" class="ps"/><use href="#person" x="218" y="212" width="20" height="26" class="ps"/><use href="#person" x="2" y="242" width="20" height="26" class="ps"/><use href="#person" x="26" y="242" width="20" height="26" class="ps"/><use href="#person" x="50" y="242" width="20" height="26" class="ps"/><use href="#person" x="74" y="242" width="20" height="26" class="ps"/><use href="#person" x="98" y="242" width="20" height="26" class="ps"/><use href="#person" x="122" y="242" width="20" height="26" class="ps"/><use href="#person" x="146" y="242" width="20" height="26" class="ps"/><use href="#person" x="170" y="242" width="20" height="26" class="ps"/><use href="#person" x="194" y="242" width="20" height="26" class="ps"/><use href="#person" x="218" y="242" width="20" height="26" class="ps"/><use href="#person" x="2" y="272" width="20" height="26" class="ps"/><use href="#person" x="26" y="272" width="20" height="26" class="ps"/><use href="#person" x="50" y="272" width="20" height="26" class="ps"/><use href="#person" x="74" y="272" width="20" height="26" class="ps"/><use href="#person" x="98" y="272" width="20" height="26" class="ps"/><use href="#person" x="122" y="272" width="20" height="26" class="pi"/><use href="#person" x="146" y="272" width="20" height="26" class="pi"/><use href="#person" x="170" y="272" width="20" height="26" class="pi"/><use href="#person" x="194" y="272" width="20" height="26" class="pi"/><use href="#person" x="218" y="272" width="20" height="26" class="pi"/></svg><figcaption><b>Al inicio · t = 0</b><span style="color: var(--s)">95 S</span> · <span style="color: var(--i)">5 I</span> · <span style="color: var(--r)">0 R</span></figcaption></figure>
+      <figure class="pop"><svg viewBox="0 0 240 300" role="img" aria-label="37 S, 34 I, 29 R"><use href="#person" x="2" y="2" width="20" height="26" class="ps"/><use href="#person" x="26" y="2" width="20" height="26" class="ps"/><use href="#person" x="50" y="2" width="20" height="26" class="ps"/><use href="#person" x="74" y="2" width="20" height="26" class="ps"/><use href="#person" x="98" y="2" width="20" height="26" class="ps"/><use href="#person" x="122" y="2" width="20" height="26" class="ps"/><use href="#person" x="146" y="2" width="20" height="26" class="ps"/><use href="#person" x="170" y="2" width="20" height="26" class="ps"/><use href="#person" x="194" y="2" width="20" height="26" class="ps"/><use href="#person" x="218" y="2" width="20" height="26" class="ps"/><use href="#person" x="2" y="32" width="20" height="26" class="ps"/><use href="#person" x="26" y="32" width="20" height="26" class="ps"/><use href="#person" x="50" y="32" width="20" height="26" class="ps"/><use href="#person" x="74" y="32" width="20" height="26" class="ps"/><use href="#person" x="98" y="32" width="20" height="26" class="ps"/><use href="#person" x="122" y="32" width="20" height="26" class="ps"/><use href="#person" x="146" y="32" width="20" height="26" class="ps"/><use href="#person" x="170" y="32" width="20" height="26" class="ps"/><use href="#person" x="194" y="32" width="20" height="26" class="ps"/><use href="#person" x="218" y="32" width="20" height="26" class="ps"/><use href="#person" x="2" y="62" width="20" height="26" class="ps"/><use href="#person" x="26" y="62" width="20" height="26" class="ps"/><use href="#person" x="50" y="62" width="20" height="26" class="ps"/><use href="#person" x="74" y="62" width="20" height="26" class="ps"/><use href="#person" x="98" y="62" width="20" height="26" class="ps"/><use href="#person" x="122" y="62" width="20" height="26" class="ps"/><use href="#person" x="146" y="62" width="20" height="26" class="ps"/><use href="#person" x="170" y="62" width="20" height="26" class="ps"/><use href="#person" x="194" y="62" width="20" height="26" class="ps"/><use href="#person" x="218" y="62" width="20" height="26" class="ps"/><use href="#person" x="2" y="92" width="20" height="26" class="ps"/><use href="#person" x="26" y="92" width="20" height="26" class="ps"/><use href="#person" x="50" y="92" width="20" height="26" class="ps"/><use href="#person" x="74" y="92" width="20" height="26" class="ps"/><use href="#person" x="98" y="92" width="20" height="26" class="ps"/><use href="#person" x="122" y="92" width="20" height="26" class="ps"/><use href="#person" x="146" y="92" width="20" height="26" class="ps"/><use href="#person" x="170" y="92" width="20" height="26" class="pi"/><use href="#person" x="194" y="92" width="20" height="26" class="pi"/><use href="#person" x="218" y="92" width="20" height="26" class="pi"/><use href="#person" x="2" y="122" width="20" height="26" class="pi"/><use href="#person" x="26" y="122" width="20" height="26" class="pi"/><use href="#person" x="50" y="122" width="20" height="26" class="pi"/><use href="#person" x="74" y="122" width="20" height="26" class="pi"/><use href="#person" x="98" y="122" width="20" height="26" class="pi"/><use href="#person" x="122" y="122" width="20" height="26" class="pi"/><use href="#person" x="146" y="122" width="20" height="26" class="pi"/><use href="#person" x="170" y="122" width="20" height="26" class="pi"/><use href="#person" x="194" y="122" width="20" height="26" class="pi"/><use href="#person" x="218" y="122" width="20" height="26" class="pi"/><use href="#person" x="2" y="152" width="20" height="26" class="pi"/><use href="#person" x="26" y="152" width="20" height="26" class="pi"/><use href="#person" x="50" y="152" width="20" height="26" class="pi"/><use href="#person" x="74" y="152" width="20" height="26" class="pi"/><use href="#person" x="98" y="152" width="20" height="26" class="pi"/><use href="#person" x="122" y="152" width="20" height="26" class="pi"/><use href="#person" x="146" y="152" width="20" height="26" class="pi"/><use href="#person" x="170" y="152" width="20" height="26" class="pi"/><use href="#person" x="194" y="152" width="20" height="26" class="pi"/><use href="#person" x="218" y="152" width="20" height="26" class="pi"/><use href="#person" x="2" y="182" width="20" height="26" class="pi"/><use href="#person" x="26" y="182" width="20" height="26" class="pi"/><use href="#person" x="50" y="182" width="20" height="26" class="pi"/><use href="#person" x="74" y="182" width="20" height="26" class="pi"/><use href="#person" x="98" y="182" width="20" height="26" class="pi"/><use href="#person" x="122" y="182" width="20" height="26" class="pi"/><use href="#person" x="146" y="182" width="20" height="26" class="pi"/><use href="#person" x="170" y="182" width="20" height="26" class="pi"/><use href="#person" x="194" y="182" width="20" height="26" class="pi"/><use href="#person" x="218" y="182" width="20" height="26" class="pi"/><use href="#person" x="2" y="212" width="20" height="26" class="pi"/><use href="#person" x="26" y="212" width="20" height="26" class="pr"/><use href="#person" x="50" y="212" width="20" height="26" class="pr"/><use href="#person" x="74" y="212" width="20" height="26" class="pr"/><use href="#person" x="98" y="212" width="20" height="26" class="pr"/><use href="#person" x="122" y="212" width="20" height="26" class="pr"/><use href="#person" x="146" y="212" width="20" height="26" class="pr"/><use href="#person" x="170" y="212" width="20" height="26" class="pr"/><use href="#person" x="194" y="212" width="20" height="26" class="pr"/><use href="#person" x="218" y="212" width="20" height="26" class="pr"/><use href="#person" x="2" y="242" width="20" height="26" class="pr"/><use href="#person" x="26" y="242" width="20" height="26" class="pr"/><use href="#person" x="50" y="242" width="20" height="26" class="pr"/><use href="#person" x="74" y="242" width="20" height="26" class="pr"/><use href="#person" x="98" y="242" width="20" height="26" class="pr"/><use href="#person" x="122" y="242" width="20" height="26" class="pr"/><use href="#person" x="146" y="242" width="20" height="26" class="pr"/><use href="#person" x="170" y="242" width="20" height="26" class="pr"/><use href="#person" x="194" y="242" width="20" height="26" class="pr"/><use href="#person" x="218" y="242" width="20" height="26" class="pr"/><use href="#person" x="2" y="272" width="20" height="26" class="pr"/><use href="#person" x="26" y="272" width="20" height="26" class="pr"/><use href="#person" x="50" y="272" width="20" height="26" class="pr"/><use href="#person" x="74" y="272" width="20" height="26" class="pr"/><use href="#person" x="98" y="272" width="20" height="26" class="pr"/><use href="#person" x="122" y="272" width="20" height="26" class="pr"/><use href="#person" x="146" y="272" width="20" height="26" class="pr"/><use href="#person" x="170" y="272" width="20" height="26" class="pr"/><use href="#person" x="194" y="272" width="20" height="26" class="pr"/><use href="#person" x="218" y="272" width="20" height="26" class="pr"/></svg><figcaption><b>En el pico · t = 16</b><span style="color: var(--s)">37 S</span> · <span style="color: var(--i)">34 I</span> · <span style="color: var(--r)">29 R</span></figcaption></figure>
+      <figure class="pop"><svg viewBox="0 0 240 300" role="img" aria-label="2 S, 0 I, 98 R"><use href="#person" x="2" y="2" width="20" height="26" class="ps"/><use href="#person" x="26" y="2" width="20" height="26" class="ps"/><use href="#person" x="50" y="2" width="20" height="26" class="pr"/><use href="#person" x="74" y="2" width="20" height="26" class="pr"/><use href="#person" x="98" y="2" width="20" height="26" class="pr"/><use href="#person" x="122" y="2" width="20" height="26" class="pr"/><use href="#person" x="146" y="2" width="20" height="26" class="pr"/><use href="#person" x="170" y="2" width="20" height="26" class="pr"/><use href="#person" x="194" y="2" width="20" height="26" class="pr"/><use href="#person" x="218" y="2" width="20" height="26" class="pr"/><use href="#person" x="2" y="32" width="20" height="26" class="pr"/><use href="#person" x="26" y="32" width="20" height="26" class="pr"/><use href="#person" x="50" y="32" width="20" height="26" class="pr"/><use href="#person" x="74" y="32" width="20" height="26" class="pr"/><use href="#person" x="98" y="32" width="20" height="26" class="pr"/><use href="#person" x="122" y="32" width="20" height="26" class="pr"/><use href="#person" x="146" y="32" width="20" height="26" class="pr"/><use href="#person" x="170" y="32" width="20" height="26" class="pr"/><use href="#person" x="194" y="32" width="20" height="26" class="pr"/><use href="#person" x="218" y="32" width="20" height="26" class="pr"/><use href="#person" x="2" y="62" width="20" height="26" class="pr"/><use href="#person" x="26" y="62" width="20" height="26" class="pr"/><use href="#person" x="50" y="62" width="20" height="26" class="pr"/><use href="#person" x="74" y="62" width="20" height="26" class="pr"/><use href="#person" x="98" y="62" width="20" height="26" class="pr"/><use href="#person" x="122" y="62" width="20" height="26" class="pr"/><use href="#person" x="146" y="62" width="20" height="26" class="pr"/><use href="#person" x="170" y="62" width="20" height="26" class="pr"/><use href="#person" x="194" y="62" width="20" height="26" class="pr"/><use href="#person" x="218" y="62" width="20" height="26" class="pr"/><use href="#person" x="2" y="92" width="20" height="26" class="pr"/><use href="#person" x="26" y="92" width="20" height="26" class="pr"/><use href="#person" x="50" y="92" width="20" height="26" class="pr"/><use href="#person" x="74" y="92" width="20" height="26" class="pr"/><use href="#person" x="98" y="92" width="20" height="26" class="pr"/><use href="#person" x="122" y="92" width="20" height="26" class="pr"/><use href="#person" x="146" y="92" width="20" height="26" class="pr"/><use href="#person" x="170" y="92" width="20" height="26" class="pr"/><use href="#person" x="194" y="92" width="20" height="26" class="pr"/><use href="#person" x="218" y="92" width="20" height="26" class="pr"/><use href="#person" x="2" y="122" width="20" height="26" class="pr"/><use href="#person" x="26" y="122" width="20" height="26" class="pr"/><use href="#person" x="50" y="122" width="20" height="26" class="pr"/><use href="#person" x="74" y="122" width="20" height="26" class="pr"/><use href="#person" x="98" y="122" width="20" height="26" class="pr"/><use href="#person" x="122" y="122" width="20" height="26" class="pr"/><use href="#person" x="146" y="122" width="20" height="26" class="pr"/><use href="#person" x="170" y="122" width="20" height="26" class="pr"/><use href="#person" x="194" y="122" width="20" height="26" class="pr"/><use href="#person" x="218" y="122" width="20" height="26" class="pr"/><use href="#person" x="2" y="152" width="20" height="26" class="pr"/><use href="#person" x="26" y="152" width="20" height="26" class="pr"/><use href="#person" x="50" y="152" width="20" height="26" class="pr"/><use href="#person" x="74" y="152" width="20" height="26" class="pr"/><use href="#person" x="98" y="152" width="20" height="26" class="pr"/><use href="#person" x="122" y="152" width="20" height="26" class="pr"/><use href="#person" x="146" y="152" width="20" height="26" class="pr"/><use href="#person" x="170" y="152" width="20" height="26" class="pr"/><use href="#person" x="194" y="152" width="20" height="26" class="pr"/><use href="#person" x="218" y="152" width="20" height="26" class="pr"/><use href="#person" x="2" y="182" width="20" height="26" class="pr"/><use href="#person" x="26" y="182" width="20" height="26" class="pr"/><use href="#person" x="50" y="182" width="20" height="26" class="pr"/><use href="#person" x="74" y="182" width="20" height="26" class="pr"/><use href="#person" x="98" y="182" width="20" height="26" class="pr"/><use href="#person" x="122" y="182" width="20" height="26" class="pr"/><use href="#person" x="146" y="182" width="20" height="26" class="pr"/><use href="#person" x="170" y="182" width="20" height="26" class="pr"/><use href="#person" x="194" y="182" width="20" height="26" class="pr"/><use href="#person" x="218" y="182" width="20" height="26" class="pr"/><use href="#person" x="2" y="212" width="20" height="26" class="pr"/><use href="#person" x="26" y="212" width="20" height="26" class="pr"/><use href="#person" x="50" y="212" width="20" height="26" class="pr"/><use href="#person" x="74" y="212" width="20" height="26" class="pr"/><use href="#person" x="98" y="212" width="20" height="26" class="pr"/><use href="#person" x="122" y="212" width="20" height="26" class="pr"/><use href="#person" x="146" y="212" width="20" height="26" class="pr"/><use href="#person" x="170" y="212" width="20" height="26" class="pr"/><use href="#person" x="194" y="212" width="20" height="26" class="pr"/><use href="#person" x="218" y="212" width="20" height="26" class="pr"/><use href="#person" x="2" y="242" width="20" height="26" class="pr"/><use href="#person" x="26" y="242" width="20" height="26" class="pr"/><use href="#person" x="50" y="242" width="20" height="26" class="pr"/><use href="#person" x="74" y="242" width="20" height="26" class="pr"/><use href="#person" x="98" y="242" width="20" height="26" class="pr"/><use href="#person" x="122" y="242" width="20" height="26" class="pr"/><use href="#person" x="146" y="242" width="20" height="26" class="pr"/><use href="#person" x="170" y="242" width="20" height="26" class="pr"/><use href="#person" x="194" y="242" width="20" height="26" class="pr"/><use href="#person" x="218" y="242" width="20" height="26" class="pr"/><use href="#person" x="2" y="272" width="20" height="26" class="pr"/><use href="#person" x="26" y="272" width="20" height="26" class="pr"/><use href="#person" x="50" y="272" width="20" height="26" class="pr"/><use href="#person" x="74" y="272" width="20" height="26" class="pr"/><use href="#person" x="98" y="272" width="20" height="26" class="pr"/><use href="#person" x="122" y="272" width="20" height="26" class="pr"/><use href="#person" x="146" y="272" width="20" height="26" class="pr"/><use href="#person" x="170" y="272" width="20" height="26" class="pr"/><use href="#person" x="194" y="272" width="20" height="26" class="pr"/><use href="#person" x="218" y="272" width="20" height="26" class="pr"/></svg><figcaption><b>Al final · t = 100</b><span style="color: var(--s)">2 S</span> · <span style="color: var(--i)">0 I</span> · <span style="color: var(--r)">98 R</span></figcaption></figure>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Datos de la simulación</h2>
+    <p class="lead">101 filas, las mismas que se exportan en <code class="file">resultados_python.csv</code>.</p>
+    <div class="legend">
+      <span><i class="dot" style="background: var(--s)"></i>Susceptibles</span>
+      <span><i class="dot" style="background: var(--i)"></i>Infectados</span>
+      <span><i class="dot" style="background: var(--r)"></i>Recuperados</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Tiempo</th><th>S</th><th>I</th><th>R</th><th>Distribución</th></tr></thead>
+        <tbody>
+          <tr class="row"><td>0</td><td>95</td><td>5</td><td>0</td><td><div class="bar"><span class="s" style="width: 95.0%"></span><span class="i" style="width: 5.0%"></span><span class="r" style="width: 0.0%"></span></div></td></tr>
+          <tr class="row"><td>1</td><td>92</td><td>7</td><td>1</td><td><div class="bar"><span class="s" style="width: 92.0%"></span><span class="i" style="width: 7.0%"></span><span class="r" style="width: 1.0%"></span></div></td></tr>
+          <tr class="row"><td>2</td><td>91</td><td>7</td><td>2</td><td><div class="bar"><span class="s" style="width: 91.0%"></span><span class="i" style="width: 7.0%"></span><span class="r" style="width: 2.0%"></span></div></td></tr>
+          <tr class="row"><td>3</td><td>88</td><td>10</td><td>2</td><td><div class="bar"><span class="s" style="width: 88.0%"></span><span class="i" style="width: 10.0%"></span><span class="r" style="width: 2.0%"></span></div></td></tr>
+          <tr class="row"><td>4</td><td>87</td><td>10</td><td>3</td><td><div class="bar"><span class="s" style="width: 87.0%"></span><span class="i" style="width: 10.0%"></span><span class="r" style="width: 3.0%"></span></div></td></tr>
+          <tr class="row"><td>5</td><td>86</td><td>9</td><td>5</td><td><div class="bar"><span class="s" style="width: 86.0%"></span><span class="i" style="width: 9.0%"></span><span class="r" style="width: 5.0%"></span></div></td></tr>
+          <tr class="row"><td>6</td><td>83</td><td>11</td><td>6</td><td><div class="bar"><span class="s" style="width: 83.0%"></span><span class="i" style="width: 11.0%"></span><span class="r" style="width: 6.0%"></span></div></td></tr>
+          <tr class="row"><td>7</td><td>80</td><td>14</td><td>6</td><td><div class="bar"><span class="s" style="width: 80.0%"></span><span class="i" style="width: 14.0%"></span><span class="r" style="width: 6.0%"></span></div></td></tr>
+          <tr class="row"><td>8</td><td>73</td><td>19</td><td>8</td><td><div class="bar"><span class="s" style="width: 73.0%"></span><span class="i" style="width: 19.0%"></span><span class="r" style="width: 8.0%"></span></div></td></tr>
+          <tr class="row"><td>9</td><td>69</td><td>17</td><td>14</td><td><div class="bar"><span class="s" style="width: 69.0%"></span><span class="i" style="width: 17.0%"></span><span class="r" style="width: 14.0%"></span></div></td></tr>
+          <tr class="row"><td>10</td><td>64</td><td>21</td><td>15</td><td><div class="bar"><span class="s" style="width: 64.0%"></span><span class="i" style="width: 21.0%"></span><span class="r" style="width: 15.0%"></span></div></td></tr>
+          <tr class="row"><td>11</td><td>59</td><td>24</td><td>17</td><td><div class="bar"><span class="s" style="width: 59.0%"></span><span class="i" style="width: 24.0%"></span><span class="r" style="width: 17.0%"></span></div></td></tr>
+          <tr class="row"><td>12</td><td>57</td><td>24</td><td>19</td><td><div class="bar"><span class="s" style="width: 57.0%"></span><span class="i" style="width: 24.0%"></span><span class="r" style="width: 19.0%"></span></div></td></tr>
+          <tr class="row"><td>13</td><td>51</td><td>29</td><td>20</td><td><div class="bar"><span class="s" style="width: 51.0%"></span><span class="i" style="width: 29.0%"></span><span class="r" style="width: 20.0%"></span></div></td></tr>
+          <tr class="row"><td>14</td><td>48</td><td>29</td><td>23</td><td><div class="bar"><span class="s" style="width: 48.0%"></span><span class="i" style="width: 29.0%"></span><span class="r" style="width: 23.0%"></span></div></td></tr>
+          <tr class="row"><td>15</td><td>41</td><td>33</td><td>26</td><td><div class="bar"><span class="s" style="width: 41.0%"></span><span class="i" style="width: 33.0%"></span><span class="r" style="width: 26.0%"></span></div></td></tr>
+          <tr class="row"><td>16</td><td>37</td><td>34</td><td>29</td><td><div class="bar"><span class="s" style="width: 37.0%"></span><span class="i" style="width: 34.0%"></span><span class="r" style="width: 29.0%"></span></div></td></tr>
+          <tr class="row"><td>17</td><td>32</td><td>34</td><td>34</td><td><div class="bar"><span class="s" style="width: 32.0%"></span><span class="i" style="width: 34.0%"></span><span class="r" style="width: 34.0%"></span></div></td></tr>
+          <tr class="row"><td>18</td><td>30</td><td>32</td><td>38</td><td><div class="bar"><span class="s" style="width: 30.0%"></span><span class="i" style="width: 32.0%"></span><span class="r" style="width: 38.0%"></span></div></td></tr>
+          <tr class="row"><td>19</td><td>28</td><td>32</td><td>40</td><td><div class="bar"><span class="s" style="width: 28.0%"></span><span class="i" style="width: 32.0%"></span><span class="r" style="width: 40.0%"></span></div></td></tr>
+          <tr class="row"><td>20</td><td>27</td><td>30</td><td>43</td><td><div class="bar"><span class="s" style="width: 27.0%"></span><span class="i" style="width: 30.0%"></span><span class="r" style="width: 43.0%"></span></div></td></tr>
+          <tr class="row"><td>21</td><td>23</td><td>33</td><td>44</td><td><div class="bar"><span class="s" style="width: 23.0%"></span><span class="i" style="width: 33.0%"></span><span class="r" style="width: 44.0%"></span></div></td></tr>
+          <tr class="row"><td>22</td><td>21</td><td>31</td><td>48</td><td><div class="bar"><span class="s" style="width: 21.0%"></span><span class="i" style="width: 31.0%"></span><span class="r" style="width: 48.0%"></span></div></td></tr>
+          <tr class="row"><td>23</td><td>19</td><td>30</td><td>51</td><td><div class="bar"><span class="s" style="width: 19.0%"></span><span class="i" style="width: 30.0%"></span><span class="r" style="width: 51.0%"></span></div></td></tr>
+          <tr class="row"><td>24</td><td>17</td><td>28</td><td>55</td><td><div class="bar"><span class="s" style="width: 17.0%"></span><span class="i" style="width: 28.0%"></span><span class="r" style="width: 55.0%"></span></div></td></tr>
+          <tr class="row"><td>25</td><td>15</td><td>26</td><td>59</td><td><div class="bar"><span class="s" style="width: 15.0%"></span><span class="i" style="width: 26.0%"></span><span class="r" style="width: 59.0%"></span></div></td></tr>
+          <tr class="row"><td>26</td><td>14</td><td>25</td><td>61</td><td><div class="bar"><span class="s" style="width: 14.0%"></span><span class="i" style="width: 25.0%"></span><span class="r" style="width: 61.0%"></span></div></td></tr>
+          <tr class="row"><td>27</td><td>13</td><td>22</td><td>65</td><td><div class="bar"><span class="s" style="width: 13.0%"></span><span class="i" style="width: 22.0%"></span><span class="r" style="width: 65.0%"></span></div></td></tr>
+          <tr class="row"><td>28</td><td>11</td><td>22</td><td>67</td><td><div class="bar"><span class="s" style="width: 11.0%"></span><span class="i" style="width: 22.0%"></span><span class="r" style="width: 67.0%"></span></div></td></tr>
+          <tr class="row"><td>29</td><td>11</td><td>20</td><td>69</td><td><div class="bar"><span class="s" style="width: 11.0%"></span><span class="i" style="width: 20.0%"></span><span class="r" style="width: 69.0%"></span></div></td></tr>
+          <tr class="row"><td>30</td><td>10</td><td>21</td><td>69</td><td><div class="bar"><span class="s" style="width: 10.0%"></span><span class="i" style="width: 21.0%"></span><span class="r" style="width: 69.0%"></span></div></td></tr>
+          <tr class="row"><td>31</td><td>9</td><td>20</td><td>71</td><td><div class="bar"><span class="s" style="width: 9.0%"></span><span class="i" style="width: 20.0%"></span><span class="r" style="width: 71.0%"></span></div></td></tr>
+          <tr class="row"><td>32</td><td>8</td><td>19</td><td>73</td><td><div class="bar"><span class="s" style="width: 8.0%"></span><span class="i" style="width: 19.0%"></span><span class="r" style="width: 73.0%"></span></div></td></tr>
+          <tr class="row"><td>33</td><td>8</td><td>17</td><td>75</td><td><div class="bar"><span class="s" style="width: 8.0%"></span><span class="i" style="width: 17.0%"></span><span class="r" style="width: 75.0%"></span></div></td></tr>
+          <tr class="row"><td>34</td><td>7</td><td>16</td><td>77</td><td><div class="bar"><span class="s" style="width: 7.0%"></span><span class="i" style="width: 16.0%"></span><span class="r" style="width: 77.0%"></span></div></td></tr>
+          <tr class="row"><td>35</td><td>7</td><td>14</td><td>79</td><td><div class="bar"><span class="s" style="width: 7.0%"></span><span class="i" style="width: 14.0%"></span><span class="r" style="width: 79.0%"></span></div></td></tr>
+          <tr class="row"><td>36</td><td>7</td><td>14</td><td>79</td><td><div class="bar"><span class="s" style="width: 7.0%"></span><span class="i" style="width: 14.0%"></span><span class="r" style="width: 79.0%"></span></div></td></tr>
+          <tr class="row"><td>37</td><td>6</td><td>14</td><td>80</td><td><div class="bar"><span class="s" style="width: 6.0%"></span><span class="i" style="width: 14.0%"></span><span class="r" style="width: 80.0%"></span></div></td></tr>
+          <tr class="row"><td>38</td><td>4</td><td>16</td><td>80</td><td><div class="bar"><span class="s" style="width: 4.0%"></span><span class="i" style="width: 16.0%"></span><span class="r" style="width: 80.0%"></span></div></td></tr>
+          <tr class="row"><td>39</td><td>4</td><td>15</td><td>81</td><td><div class="bar"><span class="s" style="width: 4.0%"></span><span class="i" style="width: 15.0%"></span><span class="r" style="width: 81.0%"></span></div></td></tr>
+          <tr class="row"><td>40</td><td>4</td><td>14</td><td>82</td><td><div class="bar"><span class="s" style="width: 4.0%"></span><span class="i" style="width: 14.0%"></span><span class="r" style="width: 82.0%"></span></div></td></tr>
+          <tr class="row"><td>41</td><td>4</td><td>14</td><td>82</td><td><div class="bar"><span class="s" style="width: 4.0%"></span><span class="i" style="width: 14.0%"></span><span class="r" style="width: 82.0%"></span></div></td></tr>
+          <tr class="row"><td>42</td><td>4</td><td>12</td><td>84</td><td><div class="bar"><span class="s" style="width: 4.0%"></span><span class="i" style="width: 12.0%"></span><span class="r" style="width: 84.0%"></span></div></td></tr>
+          <tr class="row"><td>43</td><td>4</td><td>11</td><td>85</td><td><div class="bar"><span class="s" style="width: 4.0%"></span><span class="i" style="width: 11.0%"></span><span class="r" style="width: 85.0%"></span></div></td></tr>
+          <tr class="row"><td>44</td><td>4</td><td>11</td><td>85</td><td><div class="bar"><span class="s" style="width: 4.0%"></span><span class="i" style="width: 11.0%"></span><span class="r" style="width: 85.0%"></span></div></td></tr>
+          <tr class="row"><td>45</td><td>4</td><td>11</td><td>85</td><td><div class="bar"><span class="s" style="width: 4.0%"></span><span class="i" style="width: 11.0%"></span><span class="r" style="width: 85.0%"></span></div></td></tr>
+          <tr class="row"><td>46</td><td>4</td><td>11</td><td>85</td><td><div class="bar"><span class="s" style="width: 4.0%"></span><span class="i" style="width: 11.0%"></span><span class="r" style="width: 85.0%"></span></div></td></tr>
+          <tr class="row"><td>47</td><td>4</td><td>11</td><td>85</td><td><div class="bar"><span class="s" style="width: 4.0%"></span><span class="i" style="width: 11.0%"></span><span class="r" style="width: 85.0%"></span></div></td></tr>
+          <tr class="row"><td>48</td><td>4</td><td>11</td><td>85</td><td><div class="bar"><span class="s" style="width: 4.0%"></span><span class="i" style="width: 11.0%"></span><span class="r" style="width: 85.0%"></span></div></td></tr>
+          <tr class="row"><td>49</td><td>4</td><td>9</td><td>87</td><td><div class="bar"><span class="s" style="width: 4.0%"></span><span class="i" style="width: 9.0%"></span><span class="r" style="width: 87.0%"></span></div></td></tr>
+          <tr class="row"><td>50</td><td>3</td><td>10</td><td>87</td><td><div class="bar"><span class="s" style="width: 3.0%"></span><span class="i" style="width: 10.0%"></span><span class="r" style="width: 87.0%"></span></div></td></tr>
+          <tr class="row"><td>51</td><td>3</td><td>9</td><td>88</td><td><div class="bar"><span class="s" style="width: 3.0%"></span><span class="i" style="width: 9.0%"></span><span class="r" style="width: 88.0%"></span></div></td></tr>
+          <tr class="row"><td>52</td><td>3</td><td>7</td><td>90</td><td><div class="bar"><span class="s" style="width: 3.0%"></span><span class="i" style="width: 7.0%"></span><span class="r" style="width: 90.0%"></span></div></td></tr>
+          <tr class="row"><td>53</td><td>3</td><td>7</td><td>90</td><td><div class="bar"><span class="s" style="width: 3.0%"></span><span class="i" style="width: 7.0%"></span><span class="r" style="width: 90.0%"></span></div></td></tr>
+          <tr class="row"><td>54</td><td>3</td><td>6</td><td>91</td><td><div class="bar"><span class="s" style="width: 3.0%"></span><span class="i" style="width: 6.0%"></span><span class="r" style="width: 91.0%"></span></div></td></tr>
+          <tr class="row"><td>55</td><td>3</td><td>6</td><td>91</td><td><div class="bar"><span class="s" style="width: 3.0%"></span><span class="i" style="width: 6.0%"></span><span class="r" style="width: 91.0%"></span></div></td></tr>
+          <tr class="row"><td>56</td><td>3</td><td>5</td><td>92</td><td><div class="bar"><span class="s" style="width: 3.0%"></span><span class="i" style="width: 5.0%"></span><span class="r" style="width: 92.0%"></span></div></td></tr>
+          <tr class="row"><td>57</td><td>3</td><td>3</td><td>94</td><td><div class="bar"><span class="s" style="width: 3.0%"></span><span class="i" style="width: 3.0%"></span><span class="r" style="width: 94.0%"></span></div></td></tr>
+          <tr class="row"><td>58</td><td>2</td><td>3</td><td>95</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 3.0%"></span><span class="r" style="width: 95.0%"></span></div></td></tr>
+          <tr class="row"><td>59</td><td>2</td><td>3</td><td>95</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 3.0%"></span><span class="r" style="width: 95.0%"></span></div></td></tr>
+          <tr class="row"><td>60</td><td>2</td><td>3</td><td>95</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 3.0%"></span><span class="r" style="width: 95.0%"></span></div></td></tr>
+          <tr class="row"><td>61</td><td>2</td><td>2</td><td>96</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 2.0%"></span><span class="r" style="width: 96.0%"></span></div></td></tr>
+          <tr class="row"><td>62</td><td>2</td><td>2</td><td>96</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 2.0%"></span><span class="r" style="width: 96.0%"></span></div></td></tr>
+          <tr class="row"><td>63</td><td>2</td><td>2</td><td>96</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 2.0%"></span><span class="r" style="width: 96.0%"></span></div></td></tr>
+          <tr class="row"><td>64</td><td>2</td><td>2</td><td>96</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 2.0%"></span><span class="r" style="width: 96.0%"></span></div></td></tr>
+          <tr class="row"><td>65</td><td>2</td><td>2</td><td>96</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 2.0%"></span><span class="r" style="width: 96.0%"></span></div></td></tr>
+          <tr class="row"><td>66</td><td>2</td><td>2</td><td>96</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 2.0%"></span><span class="r" style="width: 96.0%"></span></div></td></tr>
+          <tr class="row"><td>67</td><td>2</td><td>2</td><td>96</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 2.0%"></span><span class="r" style="width: 96.0%"></span></div></td></tr>
+          <tr class="row"><td>68</td><td>2</td><td>2</td><td>96</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 2.0%"></span><span class="r" style="width: 96.0%"></span></div></td></tr>
+          <tr class="row"><td>69</td><td>2</td><td>1</td><td>97</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 1.0%"></span><span class="r" style="width: 97.0%"></span></div></td></tr>
+          <tr class="row"><td>70</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>71</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>72</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>73</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>74</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>75</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>76</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>77</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>78</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>79</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>80</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>81</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>82</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>83</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>84</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>85</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>86</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>87</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>88</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>89</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>90</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>91</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>92</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>93</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>94</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>95</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>96</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>97</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>98</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>99</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+          <tr class="row"><td>100</td><td>2</td><td>0</td><td>98</td><td><div class="bar"><span class="s" style="width: 2.0%"></span><span class="i" style="width: 0.0%"></span><span class="r" style="width: 98.0%"></span></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>Generado por <code class="file">main.py</code> · Python + SimPy · semilla 42</footer>
+</main>
+</body>
+</html>
