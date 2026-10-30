@@ -1,0 +1,3 @@
+# Única dependencia externa: gráficas del paso 5 (instala numpy automáticamente).
+# El generador, los análisis y las pruebas usan solo la biblioteca estándar.
+matplotlib>=3.6
