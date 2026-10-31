@@ -1,4 +1,8 @@
-"""Parte 3: exportación de resultados a CSV, gráfica S(t), I(t), R(t) y reporte HTML."""
+"""Parte 3: exportación de resultados a CSV, gráfica S(t), I(t), R(t) y reporte HTML.
+
+Este módulo es la capa "Vista" del patrón MVC: recibe resultados ya calculados
+y solo los presenta; no modifica ni ejecuta la simulación.
+"""
 
 import csv
 from pathlib import Path
@@ -6,11 +10,13 @@ from string import Template
 
 import matplotlib
 
+# Agg debe elegirse antes de importar pyplot; así funciona sin pantalla (servidores, pruebas).
 matplotlib.use("Agg")  # Backend sin ventana, solo para guardar archivos
 import matplotlib.pyplot as plt  # noqa: E402
 
 from model import SIRParameters, StepResult  # noqa: E402
 
+# Encabezado exigido por la guía; NetLogo lee el CSV con estas columnas.
 HEADER = ["tiempo", "susceptibles", "infectados", "recuperados"]
 
 # Paleta compartida por la gráfica y el reporte
@@ -27,6 +33,7 @@ class CsvExporter:
         """Guarda una fila por instante con el encabezado de la guía."""
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
+        # newline="" evita líneas en blanco extra; el módulo csv ya escribe sus propios saltos.
         with path.open("w", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
             writer.writerow(HEADER)
@@ -46,13 +53,14 @@ class ChartView:
         path.parent.mkdir(parents=True, exist_ok=True)
         times = [step.time for step in results]
         infected = [s.infected for s in results]
+        # El pico es el registro con más infectados; si hay empate, max() toma el primero.
         peak = max(results, key=lambda step: step.infected)
 
         fig, ax = plt.subplots(figsize=(10, 5.2))
         ax.plot(times, [s.susceptible for s in results], label="Susceptibles",
                 color=COLOR_S, linewidth=2.4)
         ax.plot(times, infected, label="Infectados", color=COLOR_I, linewidth=2.4)
-        ax.fill_between(times, infected, color=COLOR_I, alpha=0.12)
+        ax.fill_between(times, infected, color=COLOR_I, alpha=0.12)  # sombrea el área bajo I(t)
         ax.plot(times, [s.recovered for s in results], label="Recuperados",
                 color=COLOR_R, linewidth=2.4)
         ax.scatter([peak.time], [peak.infected], color=COLOR_I, s=50, zorder=5)
@@ -78,9 +86,14 @@ class ChartView:
         ax.legend(frameon=False, loc="center right")
         fig.tight_layout()
         fig.savefig(path, dpi=150)
+        # Cerrar la figura libera memoria; sin esto se acumulan figuras en cada llamada.
         plt.close(fig)
 
 
+# Plantilla del reporte HTML con string.Template: cada `$nombre` es un marcador que
+# render() reemplaza con substitute(). El bloque <svg><defs> define símbolos
+# reutilizables (persona, caras S/I/R, dado) que luego se dibujan con <use href="#id">.
+# No se escriben comentarios dentro de la cadena porque formarían parte del HTML.
 REPORT_TEMPLATE = Template("""<!doctype html>
 <html lang="es">
 <head>
@@ -430,7 +443,9 @@ class ReportView:
         peak = max(results, key=lambda step: step.infected)
         first, final = results[0], results[-1]
         population = first.susceptible + first.infected + first.recovered
+        # Fin del brote: primer instante con 0 infectados; None si nunca llega a 0.
         end_time = next((step.time for step in results if step.infected == 0), None)
+        # Tasa de ataque: porcentaje de la población que dejó de ser susceptible.
         return {
             "peak_infected": peak.infected,
             "peak_time": peak.time,
@@ -441,9 +456,14 @@ class ReportView:
 
     @staticmethod
     def population_grid(step: StepResult, columns: int = 10) -> str:
-        """SVG con un muñequito por persona, coloreado según su estado."""
+        """SVG con un muñequito por persona, coloreado según su estado.
+
+        Las clases ps, pi y pr se asignan en orden S, I, R; el CSS del reporte
+        les da el color de cada estado.
+        """
         states = ["ps"] * step.susceptible + ["pi"] * step.infected + ["pr"] * step.recovered
         rows = -(-len(states) // columns)  # división redondeando hacia arriba
+        # Persona n: columna n % columns y fila n // columns; cada celda mide 24 x 30.
         people = "".join(
             f'<use href="#person" x="{2 + (n % columns) * 24}" y="{2 + (n // columns) * 30}" '
             f'width="20" height="26" class="{css}"/>'
@@ -456,6 +476,7 @@ class ReportView:
 
     @staticmethod
     def _caption(step: StepResult) -> str:
+        """Texto "S · I · R" con cada conteo en el color de su estado."""
         return (
             f'<span style="color: var(--s)">{step.susceptible} S</span> · '
             f'<span style="color: var(--i)">{step.infected} I</span> · '
@@ -465,6 +486,7 @@ class ReportView:
     @staticmethod
     def _row(step: StepResult, population: int) -> str:
         """Fila de la tabla con una barra apilada S/I/R."""
+        # El ancho de cada segmento es su porcentaje de la población total.
         bar = "".join(
             f'<span class="{css}" style="width: {100 * value / population:.1f}%"></span>'
             for css, value in (("s", step.susceptible), ("i", step.infected), ("r", step.recovered))
@@ -487,10 +509,12 @@ class ReportView:
         path.parent.mkdir(parents=True, exist_ok=True)
         summary = ReportView.summary(results)
         final = summary["final"]
+        # R0 = beta / gamma: contagios promedio que causa un infectado durante su enfermedad.
         r0 = params.beta / params.gamma
         end_time = summary["end_time"]
         start = results[0]
         peak = next(s for s in results if s.time == summary["peak_time"])
+        # substitute() exige un valor para cada marcador `$nombre`; si falta uno lanza KeyError.
         html = REPORT_TEMPLATE.substitute(
             population=params.population,
             initial_infected=params.initial_infected,
