@@ -108,8 +108,9 @@ python3 main.py
 
 ```
 APE5/
-├── README.md                          Este documento
-├── Python/
+├── README.md
+├── Informe                            APE5
+├── Simulacion_LCG/Python/
 │   ├── main.py                        Punto de entrada: lee opciones y conecta las capas
 │   ├── requirements.txt               Dependencia externa (matplotlib)
 │   ├── lcg/
@@ -131,7 +132,7 @@ APE5/
 │   │       └── controlador_simulacion.py
 │   ├── tests/                         Pruebas unitarias y de integración
 │   └── resultados/                    CSV y PNG generados
-└── Java/
+└── Simulacion_LCG/Java/
     ├── src/lcg/
     │   ├── Main.java                  Punto de entrada: lee opciones y conecta las capas
     │   ├── modelo/                    MODELO (mismas clases que en Python)
