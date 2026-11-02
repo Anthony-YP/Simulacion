@@ -1,5 +1,3 @@
-"""Estructuras que agrupan resultados del modelo para entregarlos juntos a la vista."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass

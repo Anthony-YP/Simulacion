@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Java (clases compiladas)
+Java/out/
+
+# Editores y sistema
+.idea/
+.vscode/
+.DS_Store

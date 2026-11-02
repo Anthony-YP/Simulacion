@@ -1,20 +1,14 @@
-"""Vista gráfica: genera las figuras de la práctica con matplotlib y las guarda en PNG."""
-
 from __future__ import annotations
 
 from collections.abc import Sequence
 from pathlib import Path
 
-# Se usa Figure directamente (sin pyplot): no abre ventanas ni depende de un
-# entorno gráfico, por lo que funciona igual en una terminal o un servidor.
 from matplotlib import rc_context
 from matplotlib.figure import Figure
 
 from ..modelo import AnalisisEscenario, Observacion, ResumenEstadistico
 from .contratos import VistaGraficos
 
-# Paleta sobria: superficie clara, tintas neutras para el texto y colores de serie
-# separables también por personas con daltonismo (azul, naranja, aguamarina).
 SUPERFICIE = "#fcfcfb"
 TINTA = "#0b0b0b"
 TINTA_SECUNDARIA = "#52514e"

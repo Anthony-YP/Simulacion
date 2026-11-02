@@ -1,14 +1,3 @@
-"""Punto de entrada de la versión Python del Generador Congruencial Lineal.
-
-Es la "raíz de composición": aquí, y solo aquí, se crean las clases concretas
-del modelo y de las vistas, que luego se inyectan al controlador.
-
-Uso:
-    python main.py                      # procedimiento completo con los valores de la práctica
-    python main.py --semilla 2024       # otra semilla principal
-    python main.py --help               # todas las opciones
-"""
-
 from __future__ import annotations
 
 import argparse

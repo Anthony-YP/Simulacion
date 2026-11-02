@@ -34,16 +34,6 @@ class ResultadoHullDobell:
 @dataclass(frozen=True)
 class ResultadoCiclo:
     """Resultado de buscar el ciclo de una secuencia X(n+1) = f(X(n)).
-
-    Como f actúa sobre un conjunto finito, tarde o temprano un valor se repite.
-    X(0), ..., X(mu - 1) forman la "cola" previa al ciclo y, desde X(mu), los
-    valores se repiten cada lambda pasos: X(n + lambda) = X(n) para n >= mu.
-
-    Atributos:
-        encontrado: True si se cerró el ciclo dentro de lo examinado.
-        periodo: lambda, longitud del ciclo (None si no se encontró).
-        inicio_ciclo: mu, posición del primer valor que pertenece al ciclo.
-        pasos: valores examinados o evaluaciones de f realizadas.
     """
 
     encontrado: bool
@@ -71,10 +61,6 @@ class AnalizadorPeriodo:
 
     def buscar_repeticion(self, semilla: int, observaciones: Sequence[Observacion]) -> ResultadoCiclo:
         """Busca el primer valor repetido dentro de una muestra ya generada.
-
-        Recorre X(0) = semilla, X(1), ..., X(N) guardando dónde apareció cada valor.
-        Si X(j) ya había salido en la posición i, el ciclo empieza en i y mide
-        j - i. Si no hay repeticiones, se concluye que mu + lambda > N.
         """
         primera_aparicion: dict[int, int] = {semilla: 0}
         for obs in observaciones:

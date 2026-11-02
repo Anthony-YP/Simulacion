@@ -1,12 +1,7 @@
-"""Parámetros que definen un Generador Congruencial Lineal (LCG)."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
 
-# Mayor entero con signo de 64 bits (el tipo long de Java). Python no tiene este
-# límite, pero se aplica igual para que ambas implementaciones acepten exactamente
-# los mismos parámetros y nunca se comparen secuencias calculadas de forma distinta.
 MAXIMO_ENTERO_64_BITS = 2**63 - 1
 
 

@@ -1,5 +1,3 @@
-"""Vista de consola: presenta los resultados como texto y tablas ASCII."""
-
 from __future__ import annotations
 
 import os
@@ -22,12 +20,6 @@ from .contratos import VistaResultados
 
 
 class VistaConsola(VistaResultados):
-    """Imprime los resultados en la salida estándar (o en el flujo que se le indique).
-
-    Produce exactamente el mismo texto que la VistaConsola de Java (mismos
-    títulos, tablas y número de decimales), de modo que las dos salidas se
-    pueden comparar línea por línea.
-    """
 
     ANCHO = 78
     SANGRIA = "  "

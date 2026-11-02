@@ -1,10 +1,3 @@
-"""Contratos de la capa Vista.
-
-Se separan en dos interfaces pequeñas (Segregación de Interfaces): una vista de
-texto no está obligada a dibujar gráficas y viceversa. El controlador depende de
-estas abstracciones, no de la consola ni de matplotlib (Inversión de Dependencias).
-"""
-
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

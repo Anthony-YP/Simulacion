@@ -1,5 +1,3 @@
-"""Controlador: ejecuta los pasos del procedimiento coordinando el modelo y las vistas."""
-
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
@@ -28,12 +26,6 @@ FabricaGenerador = Callable[[ParametrosLCG], GeneradorPseudoaleatorio]
 
 
 class ControladorSimulacion:
-    """Orquesta los 8 pasos de la práctica.
-
-    No hace cálculos ni imprime: pide los datos al modelo y se los entrega a las
-    vistas. Todas sus dependencias llegan por el constructor, de modo que pueden
-    sustituirse por otras implementaciones de los mismos contratos.
-    """
 
     def __init__(
         self,
@@ -57,7 +49,7 @@ class ControladorSimulacion:
         self._archivos: list[Path] = []
 
     def ejecutar(self) -> None:
-        """Ejecuta el procedimiento completo, del paso 1 al 8."""
+        
         cfg = self._cfg
         self._archivos.clear()
         self._vista.mostrar_titulo(cfg.implementacion)
@@ -83,7 +75,7 @@ class ControladorSimulacion:
         base = self._generar_y_guardar(cfg.parametros)
         ultimo = base[-1]
         self._vista.mostrar_mensaje(f"Se generaron X(1) ... X({ultimo.n}) con la semilla {cfg.parametros.semilla}.")
-        self._vista.mostrar_mensaje(f"Último valor: X({ultimo.n}) = {ultimo.x}  (sirve como control rápido).")
+        self._vista.mostrar_mensaje(f"Último valor: X({ultimo.n}) = {ultimo.x}.")
         return base
 
     def _paso_4_primeras_observaciones(self, base: Sequence[Observacion]) -> None:

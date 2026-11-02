@@ -1,5 +1,3 @@
-"""Generadores de números pseudoaleatorios."""
-
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -9,14 +7,7 @@ from .parametros import ParametrosLCG
 
 
 class GeneradorPseudoaleatorio(ABC):
-    """Contrato común de cualquier generador pseudoaleatorio.
-
-    Un generador es una máquina de estados determinista: parte de una semilla,
-    aplica una función de transición X(n+1) = f(X(n)) y normaliza cada estado a
-    U(n) en [0, 1). Los analizadores y el controlador dependen de esta
-    abstracción y no de una clase concreta (Inversión de Dependencias), por lo
-    que se pueden añadir otros generadores sin modificarlos (Abierto/Cerrado).
-    """
+    
 
     @property
     @abstractmethod

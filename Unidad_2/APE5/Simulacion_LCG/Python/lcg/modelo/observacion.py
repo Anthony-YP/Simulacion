@@ -1,5 +1,3 @@
-"""Unidad de dato producida por un generador."""
-
 from dataclasses import dataclass
 
 

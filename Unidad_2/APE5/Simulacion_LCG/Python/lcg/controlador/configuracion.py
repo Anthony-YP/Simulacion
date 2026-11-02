@@ -1,5 +1,3 @@
-"""Configuración de la simulación: valores de la práctica y escenarios del período."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -32,21 +30,6 @@ ESCENARIOS_PERIODO = (
 
 @dataclass(frozen=True)
 class ConfiguracionSimulacion:
-    """Opciones de una ejecución completa del procedimiento.
-
-    Atributos:
-        parametros: a, c, m y semilla del generador principal.
-        semilla_alternativa: semilla usada en el paso 7.
-        cantidad: valores a generar con cada semilla.
-        filas_tabla: filas mostradas en las tablas de consola.
-        periodo_completo: si es True, mide el ciclo entero con el algoritmo de Brent.
-        directorio_resultados: carpeta donde se guardan CSV y gráficas.
-        directorio_externo: carpeta con los CSV de la otra implementación (None = no comparar).
-        implementacion / implementacion_externa: nombres usados en archivos y tablas.
-        escenarios: parámetros adicionales para estudiar el período.
-        valores_por_escenario: valores X(0), X(1), ... registrados por escenario.
-        limite_pasos_escenarios: tope de evaluaciones de Brent en cada escenario.
-    """
 
     parametros: ParametrosLCG
     semilla_alternativa: int = SEMILLA_ALTERNATIVA

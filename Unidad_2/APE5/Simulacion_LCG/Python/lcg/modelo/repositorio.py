@@ -1,5 +1,3 @@
-"""Persistencia de secuencias y comparaciones en archivos CSV."""
-
 from __future__ import annotations
 
 import csv
