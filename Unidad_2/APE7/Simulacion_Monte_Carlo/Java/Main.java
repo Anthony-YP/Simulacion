@@ -1,4 +1,7 @@
+import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,14 +23,44 @@ import montecarlo.vista.VistaGraficos;
  * java -cp out Main --sin-graficos           Solo tablas y CSV
  * </pre>
  *
- * Se ejecuta desde la carpeta Java/, por eso las rutas son relativas a ella.
+ * Las rutas se calculan a partir de la carpeta Java/ del proyecto, no de la carpeta desde la que se
+ * ejecuta. Así los resultados se guardan siempre en Java/Resultados (también con el botón Run del IDE).
  */
 public final class Main {
 
-    private static final Path CARPETA_RESULTADOS = Path.of("Resultados");
-    private static final Path RESULTADOS_PYTHON = Path.of("..", "Python", "Resultados", "resultados_python.csv");
+    private static final Path CARPETA_JAVA = ubicarCarpetaJava();
+    private static final Path CARPETA_RESULTADOS = CARPETA_JAVA.resolve("Resultados");
+    private static final Path RESULTADOS_PYTHON =
+            CARPETA_JAVA.getParent().resolve("Python").resolve("Resultados").resolve("resultados_python.csv");
 
     private Main() {
+    }
+
+    /**
+     * Busca la carpeta Java/ del proyecto (la que contiene Main.java y montecarlo/).
+     * Primero sube desde donde están las clases compiladas (por ejemplo Java/out) y, si no la encuentra,
+     * prueba con la carpeta actual y con Simulacion_Monte_Carlo/Java dentro de ella.
+     */
+    private static Path ubicarCarpetaJava() {
+        List<Path> candidatas = new ArrayList<>();
+        CodeSource clases = Main.class.getProtectionDomain().getCodeSource();
+        if (clases != null) {
+            try {
+                for (Path p = Path.of(clases.getLocation().toURI()).toAbsolutePath(); p != null; p = p.getParent()) {
+                    candidatas.add(p);
+                }
+            } catch (URISyntaxException | IllegalArgumentException e) {
+                // Ubicación no convertible a ruta: se continúa con la carpeta actual.
+            }
+        }
+        Path actual = Path.of("").toAbsolutePath();
+        candidatas.add(actual);
+        candidatas.add(actual.resolve("Simulacion_Monte_Carlo").resolve("Java"));
+
+        return candidatas.stream()
+                .filter(p -> Files.isRegularFile(p.resolve("Main.java")) && Files.isDirectory(p.resolve("montecarlo")))
+                .findFirst()
+                .orElse(actual);
     }
 
     public static void main(String[] args) {
